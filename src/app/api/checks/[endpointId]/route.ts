@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getChecksForEndpoint, getChecksLast24h, getIncidents } from "@/lib/db";
+import { getChecksForEndpoint, getChecksInRange, getIncidents } from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +22,17 @@ export async function GET(
     }
 
     if (range === "24h") {
-      const checks = getChecksLast24h(id);
+      const checks = getChecksInRange(id, 24);
+      return NextResponse.json(checks);
+    }
+
+    if (range === "7d") {
+      const checks = getChecksInRange(id, 168);
+      return NextResponse.json(checks);
+    }
+
+    if (range === "30d") {
+      const checks = getChecksInRange(id, 720);
       return NextResponse.json(checks);
     }
 

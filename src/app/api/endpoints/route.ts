@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, url, check_interval, expected_status } = body;
+    const { name, url, check_interval, expected_status, threshold_degraded, threshold_down } = body;
 
     if (!name || !url) {
       return NextResponse.json(
@@ -40,7 +40,9 @@ export async function POST(request: NextRequest) {
       name,
       url,
       check_interval || 60,
-      expected_status || 200
+      expected_status || 200,
+      threshold_degraded || 200,
+      threshold_down || 1000
     );
 
     return NextResponse.json(endpoint, { status: 201 });

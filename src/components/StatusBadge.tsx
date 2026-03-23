@@ -3,12 +3,16 @@
 interface StatusBadgeProps {
   responseTimeMs: number | null;
   isUp: number | null;
+  thresholdDegraded?: number;
+  thresholdDown?: number;
   size?: "sm" | "md";
 }
 
 export default function StatusBadge({
   responseTimeMs,
   isUp,
+  thresholdDegraded = 200,
+  thresholdDown = 1000,
   size = "md",
 }: StatusBadgeProps) {
   let status: "up" | "degraded" | "down";
@@ -20,10 +24,10 @@ export default function StatusBadge({
   } else if (isUp === 0) {
     status = "down";
     label = "Down";
-  } else if (responseTimeMs !== null && responseTimeMs > 1000) {
+  } else if (responseTimeMs !== null && responseTimeMs > thresholdDown) {
     status = "degraded";
     label = "Degraded";
-  } else if (responseTimeMs !== null && responseTimeMs > 200) {
+  } else if (responseTimeMs !== null && responseTimeMs > thresholdDegraded) {
     status = "degraded";
     label = "Slow";
   } else {

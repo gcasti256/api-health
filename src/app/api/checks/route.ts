@@ -3,7 +3,40 @@ import {
   getEndpointsDueForCheck,
   recordCheck,
   getAllEndpoints,
+  getActiveAlertsForEndpoint,
+  recordAlertLog,
 } from "@/lib/db";
+
+async function fireAlerts(endpointId: number, endpointName: string, endpointUrl: string, error: string | null, statusCode: number | null) {
+  const alerts = getActiveAlertsForEndpoint(endpointId);
+
+  for (const alert of alerts) {
+    const message = `[API Health] ${endpointName} is DOWN\nURL: ${endpointUrl}\n${error ? `Error: ${error}` : `Status: ${statusCode}`}\nTime: ${new Date().toISOString()}`;
+
+    if (alert.type === "webhook") {
+      try {
+        await fetch(alert.destination, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "endpoint_down",
+            endpoint: { id: endpointId, name: endpointName, url: endpointUrl },
+            error,
+            status_code: statusCode,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        recordAlertLog(alert.id, endpointId, "endpoint_down", message, true);
+      } catch (err) {
+        recordAlertLog(alert.id, endpointId, "endpoint_down", `Webhook failed: ${(err as Error).message}`, false);
+      }
+    } else if (alert.type === "email") {
+      // Email alerts would use a service like SendGrid/Resend in production
+      // For demo purposes, log the alert
+      recordAlertLog(alert.id, endpointId, "endpoint_down", `Email to ${alert.destination}: ${message}`, true);
+    }
+  }
+}
 
 export async function POST() {
   try {
@@ -47,6 +80,11 @@ export async function POST() {
       }
 
       recordCheck(endpoint.id, statusCode, responseTimeMs, isUp, error);
+
+      // Fire alerts if endpoint is down
+      if (!isUp) {
+        await fireAlerts(endpoint.id, endpoint.name, endpoint.url, error, statusCode);
+      }
 
       results.push({
         endpoint_id: endpoint.id,

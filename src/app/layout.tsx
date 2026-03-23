@@ -28,6 +28,12 @@ export default function RootLayout({
             </a>
             <div className="flex items-center gap-4">
               <a
+                href="/status"
+                className="text-xs text-white/40 transition-colors hover:text-white/70"
+              >
+                Status Page
+              </a>
+              <a
                 href="https://github.com/gcasti256"
                 target="_blank"
                 rel="noopener noreferrer"

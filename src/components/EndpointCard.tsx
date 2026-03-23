@@ -11,6 +11,8 @@ interface EndpointCardProps {
   latestResponseTimeMs: number | null;
   latestIsUp: number | null;
   latestCheckedAt: string | null;
+  thresholdDegraded?: number;
+  thresholdDown?: number;
   onDelete: (id: number) => void;
 }
 
@@ -35,6 +37,8 @@ export default function EndpointCard({
   latestResponseTimeMs,
   latestIsUp,
   latestCheckedAt,
+  thresholdDegraded,
+  thresholdDown,
   onDelete,
 }: EndpointCardProps) {
   return (
@@ -69,6 +73,8 @@ export default function EndpointCard({
         <StatusBadge
           responseTimeMs={latestResponseTimeMs}
           isUp={latestIsUp}
+          thresholdDegraded={thresholdDegraded}
+          thresholdDown={thresholdDown}
         />
         <div className="flex items-center gap-4 text-sm text-white/40">
           {latestResponseTimeMs !== null && (

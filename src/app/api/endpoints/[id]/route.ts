@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getEndpointById,
   deleteEndpoint,
+  updateEndpoint,
   getUptimePercentage,
 } from "@/lib/db";
 
@@ -38,6 +39,33 @@ export async function GET(
     console.error("Failed to fetch endpoint:", error);
     return NextResponse.json(
       { error: "Failed to fetch endpoint" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const endpointId = parseInt(id, 10);
+    if (isNaN(endpointId)) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const updated = updateEndpoint(endpointId, body);
+    if (!updated) {
+      return NextResponse.json({ error: "Endpoint not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Failed to update endpoint:", error);
+    return NextResponse.json(
+      { error: "Failed to update endpoint" },
       { status: 500 }
     );
   }

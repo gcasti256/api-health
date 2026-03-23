@@ -10,6 +10,8 @@ interface EndpointWithLatestCheck {
   url: string;
   check_interval: number;
   expected_status: number;
+  threshold_degraded: number;
+  threshold_down: number;
   created_at: string;
   updated_at: string;
   latest_status_code: number | null;
@@ -68,6 +70,8 @@ export default function DashboardClient() {
     url: string;
     check_interval: number;
     expected_status: number;
+    threshold_degraded: number;
+    threshold_down: number;
   }) => {
     const res = await fetch("/api/endpoints", {
       method: "POST",
@@ -86,12 +90,14 @@ export default function DashboardClient() {
     }
   };
 
-  const upCount = endpoints.filter((e) => e.latest_is_up === 1).length;
+  const upCount = endpoints.filter(
+    (e) => e.latest_is_up === 1 && (e.latest_response_time_ms === null || e.latest_response_time_ms <= (e.threshold_degraded || 200))
+  ).length;
   const degradedCount = endpoints.filter(
     (e) =>
       e.latest_is_up === 1 &&
       e.latest_response_time_ms !== null &&
-      e.latest_response_time_ms > 200
+      e.latest_response_time_ms > (e.threshold_degraded || 200)
   ).length;
   const downCount = endpoints.filter(
     (e) => e.latest_is_up !== null && e.latest_is_up === 0
@@ -115,6 +121,15 @@ export default function DashboardClient() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href="/status"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Public Status
+          </a>
           <button
             onClick={triggerChecks}
             disabled={isChecking}
@@ -218,6 +233,8 @@ export default function DashboardClient() {
               latestResponseTimeMs={endpoint.latest_response_time_ms}
               latestIsUp={endpoint.latest_is_up}
               latestCheckedAt={endpoint.latest_checked_at}
+              thresholdDegraded={endpoint.threshold_degraded}
+              thresholdDown={endpoint.threshold_down}
               onDelete={handleDelete}
             />
           ))}

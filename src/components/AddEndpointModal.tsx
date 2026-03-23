@@ -10,6 +10,8 @@ interface AddEndpointModalProps {
     url: string;
     check_interval: number;
     expected_status: number;
+    threshold_degraded: number;
+    threshold_down: number;
   }) => void;
 }
 
@@ -22,6 +24,9 @@ export default function AddEndpointModal({
   const [url, setUrl] = useState("");
   const [checkInterval, setCheckInterval] = useState(60);
   const [expectedStatus, setExpectedStatus] = useState(200);
+  const [thresholdDegraded, setThresholdDegraded] = useState(200);
+  const [thresholdDown, setThresholdDown] = useState(1000);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -35,11 +40,16 @@ export default function AddEndpointModal({
         url,
         check_interval: checkInterval,
         expected_status: expectedStatus,
+        threshold_degraded: thresholdDegraded,
+        threshold_down: thresholdDown,
       });
       setName("");
       setUrl("");
       setCheckInterval(60);
       setExpectedStatus(200);
+      setThresholdDegraded(200);
+      setThresholdDown(1000);
+      setShowAdvanced(false);
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -106,9 +116,13 @@ export default function AddEndpointModal({
                 onChange={(e) => setCheckInterval(Number(e.target.value))}
                 className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/90 outline-none transition-colors focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30"
               >
+                <option value={15}>15 seconds</option>
                 <option value={30}>30 seconds</option>
                 <option value={60}>1 minute</option>
                 <option value={300}>5 minutes</option>
+                <option value={600}>10 minutes</option>
+                <option value={1800}>30 minutes</option>
+                <option value={3600}>1 hour</option>
               </select>
             </div>
 
@@ -125,6 +139,54 @@ export default function AddEndpointModal({
                 className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/90 outline-none transition-colors focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30"
               />
             </div>
+          </div>
+
+          {/* Advanced: Thresholds */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-1.5 text-xs font-medium text-white/40 hover:text-white/60 transition-colors"
+            >
+              <svg
+                className={`h-3 w-3 transition-transform ${showAdvanced ? "rotate-90" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              Response time thresholds
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-amber-400/70">
+                    Degraded above (ms)
+                  </label>
+                  <input
+                    type="number"
+                    value={thresholdDegraded}
+                    onChange={(e) => setThresholdDegraded(Number(e.target.value))}
+                    min={50}
+                    max={10000}
+                    className="w-full rounded-lg border border-amber-500/20 bg-amber-500/[0.03] px-3 py-2 text-sm text-white/90 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-red-400/70">
+                    Down above (ms)
+                  </label>
+                  <input
+                    type="number"
+                    value={thresholdDown}
+                    onChange={(e) => setThresholdDown(Number(e.target.value))}
+                    min={100}
+                    max={30000}
+                    className="w-full rounded-lg border border-red-500/20 bg-red-500/[0.03] px-3 py-2 text-sm text-white/90 outline-none transition-colors focus:border-red-500/40 focus:ring-1 focus:ring-red-500/20"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
